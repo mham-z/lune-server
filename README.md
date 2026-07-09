@@ -1,12 +1,17 @@
-An API to compile Luau and return bytecode
+An API to compile Luau and return bytecode \
 Needs:
-	- rokit
-	- lune
+- rokit
+- lune
+
+---
 
 Usage on server:
 ```sh
-auth="secret" lune run server.luau
+auth="secret" ./start
 ```
+This starts the server along with a Pinggy tunnel
+
+---
 
 Usage via curl:
 ```sh
@@ -16,6 +21,8 @@ curl -X POST <address> \
 	--data-binary "print(\"Hello world!\")"\
 	-o a.luauc
 ```
+
+---
 
 Usage via Roblox:
 ```lua

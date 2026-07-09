@@ -1,12 +1,5 @@
 #!/bin/bash
 
-if [ -f .env ]; then
-	export $(grep -v '^#' .env | xargs)
-else
-	echo ".env file not found!"
-	exit 1
-fi
-
 echo "Starting Lune server"
 lune run server.luau > server.log &
 LUNE_PID=$!

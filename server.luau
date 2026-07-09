@@ -26,7 +26,7 @@ local function compile(sourceCode)
 		print(uuid, ":", "Fail")
 		local error = string.match(tostring(result), "(.-)%s*stack traceback:") or tostring(result)
 		return {
-			status = 400,
+			status = 200,
 			body = "-- COMPILE ERROR --\n" .. error
 		}
 	end

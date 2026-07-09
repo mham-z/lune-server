@@ -1,10 +1,11 @@
 local process = require("@lune/process")
 local net = require("@lune/net")
 local luau = require("@lune/luau")
+local fs = require("@lune/fs")
 
 local PORT = tonumber(process.env.PORT) or 8080
 local AUTH_KEY = process.env.auth
-local MAX_PAYLOAD_SIZE = 1 * 1024 * 1024
+local MAX_PAYLOAD_SIZE = 300 * 1024
 
 local function generate_uuid()
 	local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
@@ -55,28 +56,66 @@ net.serve(PORT, function(request)
 		}
 	end
 
-	if request.method ~= "POST" then
-		return {
-			status = 405;
-			body = "Method Not Allowed";
-		}
+	if request.method == "POST" then
+		local sourceCode = request.body
+		if not sourceCode or sourceCode == "" then
+			return {
+				status = 400;
+				body = "Bad Request";
+			}
+		end
+		if string.len(sourceCode) > MAX_PAYLOAD_SIZE then
+			return {
+				status = 413;
+				body = "Max payload size: "..MAX_PAYLOAD_SIZE;
+			}
+		end
+
+		return compile(sourceCode)
+	elseif request.method == "GET" then
+		local scriptName = request.query["name"]
+		
+		if not scriptName or scriptName == "" then
+			return {
+				status = 400,
+				body = "Bad Request"
+			}
+		end
+
+		-- we clean the scriptName of ".." so nobody does fishy things
+		local safeName = string.gsub(scriptName, "%.%.", "")
+
+		if safeName == "" then
+			return {
+				status = 400,
+				body = "Bad Request"
+			}
+		end
+
+		local filePath = "scripts/" .. safeName
+
+		if not fs.isFile(filePath) then
+			return {
+				status = 404,
+				body = string.format("File not found: %s", safeName)
+			}
+		end
+
+		local success, sourceCode = pcall(fs.readFile, filePath)
+		if not success or not sourceCode or sourceCode == "" then
+			return {
+				status = 500,
+				body = "Failed to read file"
+			}
+		end
+
+		return compile(sourceCode)
 	end
 
-	local sourceCode = request.body
-	if not sourceCode or sourceCode == "" then
-		return {
-			status = 400;
-			body = "Bad Request";
-		}
-	end
-	if string.len(sourceCode) > MAX_PAYLOAD_SIZE then
-		return {
-			status = 413;
-			body = "Max payload size: "..MAX_PAYLOAD_SIZE;
-		}
-	end
-
-	return compile(sourceCode)
+	return {
+		status = 405;
+		body = "Method Not Allowed";
+	}
 end)
 
 print("Lune compilation server started on port", PORT)

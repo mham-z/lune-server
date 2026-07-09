@@ -3,6 +3,7 @@ local net = require("@lune/net")
 local luau = require("@lune/luau")
 
 local PORT = tonumber(process.env.PORT) or 8080
+local AUTH_KEY = process.env.auth
 local MAX_PAYLOAD_SIZE = 1 * 1024 * 1024
 
 local function generate_uuid()
@@ -23,7 +24,7 @@ local function compile(sourceCode)
 
 	if not success then
 		print(uuid, ":", "Fail")
-		local error = string.match(tostring(result), "(.-)%s*stack traceback:")
+		local error = string.match(tostring(result), "(.-)%s*stack traceback:") or tostring(result)
 		return {
 			status = 400,
 			body = "-- COMPILE ERROR --\n" .. error
@@ -39,6 +40,21 @@ local function compile(sourceCode)
 end
 
 net.serve(PORT, function(request)
+	if not AUTH_KEY or AUTH_KEY == "" then
+		return {
+			status = 500;
+			body = "Internal Server Error";
+		}
+	end
+
+	local clientToken = request.headers["authorization"]
+	if clientToken ~= AUTH_KEY then
+		return {
+			status = 401;
+			body = "Unauthorized";
+		}
+	end
+
 	if request.method ~= "POST" then
 		return {
 			status = 405;

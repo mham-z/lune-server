@@ -1,43 +1,66 @@
+local process = require("@lune/process")
 local net = require("@lune/net")
 local luau = require("@lune/luau")
 
-print("Lune compilation server starting on port 8080...")
+local PORT = tonumber(process.env.PORT) or 8080
+local MAX_PAYLOAD_SIZE = 1 * 1024 * 1024
 
-net.serve(8080, function(request)
-    -- Only allow POST requests
-    if request.method ~= "POST" then
-        return {
-            status = 405,
-            body = "Method Not Allowed"
-        }
-    end
+local function generate_uuid()
+	local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+	return string.gsub(template, '[xy]', function (c)
+		local v = (c == 'x') and math.random(0, 15) or math.random(8, 11)
+		return string.format('%x', v)
+	end)
+end
 
-    local sourceCode = request.body
-    if not sourceCode or sourceCode == "" then
-        return {
-            status = 400,
-            body = "Missing source code in request body"
-        }
-    end
+local function compile(sourceCode)
+	local uuid = generate_uuid()
+	print(uuid, ":", "Compiling")
 
-    -- Compile the string to bytecode
-    -- Wrap in pcall to catch syntax errors gracefully
-    local success, result = pcall(function()
-        return luau.compile(sourceCode)
-    end)
+	local success, result = pcall(function()
+		return luau.compile(sourceCode)
+	end)
 
-    if not success then
-        return {
-            status = 400,
-            body = "Compilation Error: " .. tostring(result)
-        }
-    end
+	if not success then
+		print(uuid, ":", "Fail")
+		local error = string.match(tostring(result), "(.-)%s*stack traceback:")
+		return {
+			status = 400,
+			body = "-- COMPILE ERROR --\n" .. error
+		}
+	end
 
-    -- Return the raw binary bytecode string
-    return {
-        status = 200,
-        headers = { ["Content-Type"] = "application/octet-stream" },
-        body = result
-    }
+	print(uuid, ":", "Success")
+	return {
+		status = 200,
+		headers = { ["Content-Type"] = "application/octet-stream" },
+		body = result
+	}
+end
+
+net.serve(PORT, function(request)
+	if request.method ~= "POST" then
+		return {
+			status = 405;
+			body = "Method Not Allowed";
+		}
+	end
+
+	local sourceCode = request.body
+	if not sourceCode or sourceCode == "" then
+		return {
+			status = 400;
+			body = "Bad Request";
+		}
+	end
+	if string.len(sourceCode) > MAX_PAYLOAD_SIZE then
+		return {
+			status = 413;
+			body = "Max payload size: "..MAX_PAYLOAD_SIZE;
+		}
+	end
+
+	return compile(sourceCode)
 end)
 
+print("Lune compilation server started on port", PORT)

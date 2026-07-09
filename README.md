@@ -29,11 +29,10 @@ Usage via Roblox:
 local function compile(sourceCode)
 	local headers = {
 		["Authorization"] = "secret",
-		["Content-Type"] = "text/plain"
 	}
 
 	local success, response = pcall(function()
-		return game:GetService("HttpService"):PostAsync("<address>", sourceCode, Enum.HttpContentType.ApplicationJson, false, headers)
+		return game:GetService("HttpService"):PostAsync("<address>", sourceCode, Enum.HttpContentType.TextPlain, false, headers)
 	end)
 
 	if success then

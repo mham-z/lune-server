@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ -f .env ]; then
+	export $(grep -v '^#' .env | xargs)
+else
+	echo ".env file not found!"
+	exit 1
+fi
+
+echo "Starting Lune server"
+lune run server.luau > server.log &
+LUNE_PID=$!
+
+sleep 1
+
+trap "kill $LUNE_PID 2>/dev/null" EXIT
+
+echo "Starting tunnel"
+echo "------------------------------------------------------------"
+
+sshpass -p "" ssh -p 443 -o StrictHostKeyChecking=no -R0:localhost:8080 free.pinggy.io
+
+echo "------------------------------------------------------------"
+echo "Kill $LUNE_PID"
+kill $LUNE_PID 2>/dev/null
+echo "Goodbye"

@@ -27,8 +27,8 @@ local function compile(sourceCode)
 		print(uuid, ":", "Fail")
 		local error = string.match(tostring(result), "(.-)%s*stack traceback:") or tostring(result)
 		return {
-			status = 200,
-			body = "-- COMPILE ERROR --\n" .. error
+			status = 422,
+			body = error
 		}
 	end
 
@@ -43,8 +43,8 @@ end
 net.serve(PORT, function(request)
 	if not AUTH_KEY or AUTH_KEY == "" then
 		return {
-			status = 500;
-			body = "Internal Server Error";
+			status = 503;
+			body = "Authentication was not properly set up!";
 		}
 	end
 
@@ -61,7 +61,7 @@ net.serve(PORT, function(request)
 		if not sourceCode or sourceCode == "" then
 			return {
 				status = 400;
-				body = "Bad Request";
+				body = "No source code provided";
 			}
 		end
 		if string.len(sourceCode) > MAX_PAYLOAD_SIZE then
@@ -78,7 +78,7 @@ net.serve(PORT, function(request)
 		if not scriptName or scriptName == "" then
 			return {
 				status = 400,
-				body = "Bad Request"
+				body = "No script name provided"
 			}
 		end
 
@@ -88,7 +88,7 @@ net.serve(PORT, function(request)
 		if safeName == "" then
 			return {
 				status = 400,
-				body = "Bad Request"
+				body = "Invalid script name"
 			}
 		end
 
@@ -105,7 +105,7 @@ net.serve(PORT, function(request)
 		if not success or not sourceCode or sourceCode == "" then
 			return {
 				status = 500,
-				body = "Failed to read file"
+				body = "Failed to read script file"
 			}
 		end
 
@@ -114,7 +114,7 @@ net.serve(PORT, function(request)
 
 	return {
 		status = 405;
-		body = "Method Not Allowed";
+		body = "Not allowed";
 	}
 end)
 

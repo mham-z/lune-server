@@ -12,7 +12,7 @@ Usage on server:
 ```sh
 auth="secret" ./start
 ```
-This starts the server along with a Pinggy tunnel
+This starts the server along with a cloudflare tunnel
 
 ---
 
@@ -45,7 +45,6 @@ Usage via Roblox:
 				Body = sourceCode
 			})
 		end)
-
 
 		if success then
 			return response

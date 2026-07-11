@@ -6,6 +6,8 @@ Needs:
 If you send a POST request with the script source code, the server will return the compiled bytecode. \
 If you send a GET request with a script name (like https://example.com?name=helloworld.luau), the server will return the compiled bytecode of a file named that in the scripts directory. 
 
+A MD5 hash of every source code recieved by the compiler is made and the code's resultant bytecode is cached. The cache auto-cleans if a size limit is ever hit.
+
 ---
 
 Usage on server:
@@ -16,7 +18,7 @@ This starts the server along with a cloudflare tunnel
 
 ---
 
-Usage via curl:
+### Usage via curl
 - POST:
 	```sh
 	curl -X POST <address> \
@@ -31,19 +33,25 @@ Usage via curl:
 		-H "Authorization: secret"
 		-o a.luauc
 	```
+You can then try Lune's [luau.load](https://lune-org.github.io/docs/api-reference/luau/#load) on the resulting bytecode.
+
 ---
 
-Usage via Roblox:
+### Usage via Roblox
 - POST:
 	```lua
+	local ADDRESS = "<address>"
+	local SECRET = "secret"
+	local HttpService = game:GetService("HttpService")
+
 	local function compile(sourceCode)
 		local success, response = pcall(function()
-		return game:GetService("HttpService"):RequestAsync({
-				Url = "<address>",
-				Method = "POST",
-				Headers = { ["Authorization"] = "secret", ["Content-Type"] = "text/plain" },
-				Body = sourceCode
-			})
+		return HttpService:RequestAsync {
+				Url = ADDRESS;
+				Method = "POST";
+				Headers = {["Authorization"] = SECRET; ["Content-Type"] = "text/plain"};
+				Body = sourceCode;
+			}
 		end)
 
 		if success then
@@ -54,19 +62,20 @@ Usage via Roblox:
 	end
 
 	compile("print(\"Hello world!\")")
-	-- you can then straight up send this to fiu or whatever to execute the bytecode (make sure its not nil!)
 	```
 - GET:
 	```lua
+	local ADDRESS = "<address>"
+	local SECRET = "secret"
 	local HttpService = game:GetService("HttpService")
 
 	local function compileFile(scriptName)
 		local success, response = pcall(function()
-			return HttpService:RequestAsync({
-				Url = "<address>".."?name="..HttpService:UrlEncode(scriptName),
-				Method = "GET",
-				Headers = {["Authorization"] = "secret"}
-			})
+			return HttpService:RequestAsync {
+				Url = ADDRESS.."/?name="..HttpService:UrlEncode(scriptName);
+				Method = "GET";
+				Headers = {["Authorization"] = SECRET};
+			}
 		end)
 
 		if success then
@@ -78,3 +87,4 @@ Usage via Roblox:
 
 	compileFile("helloworld.luau")
 	```
+You can then straight up send this to [Fiu](https://github.com/rce-incorporated/Fiu), [Splice](https://github.com/malice-nz/Splice), or any other applicable bytecode interpreter to run it.

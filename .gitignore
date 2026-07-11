@@ -2,3 +2,4 @@
 *.log
 cache/
 scripts/
+!scripts/helloworld.luau

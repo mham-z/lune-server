@@ -1,3 +1,4 @@
 *.luauc
 *.log
 cache/
+scripts/

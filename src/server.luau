@@ -11,6 +11,10 @@ local SHORT_HASH_LENGTH = 64
 local CACHE_DIR = "cache/"
 local MAX_CACHE_SIZE_BYTES = 50 * 1024 * 1024
 
+if not AUTH or AUTH == "" or string.match(AUTH, "%S") == nil then
+	return error("AUTH env var not set!", 0)
+end
+
 local function checkAndCleanCache()
 	local success, files = pcall(fs.readDir, CACHE_DIR)
 	if not success or not files then
@@ -103,12 +107,7 @@ local function compile(sourceCode)
 end
 
 net.serve(PORT, function(request)
-	if not AUTH or AUTH == "" then
-		return {status = 503; body = "Authentication was not properly set up!"}
-	end
-
-	local clientToken = request.headers["authorization"]
-	if clientToken ~= AUTH then
+	if request.headers["authorization"] ~= AUTH then
 		return {status = 401; body = "Unauthorized"}
 	end
 

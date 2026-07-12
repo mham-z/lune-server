@@ -116,7 +116,7 @@ net.serve(PORT, function(request)
 		if not sourceCode or sourceCode == "" then
 			return {status = 400; body = "No source code provided"}
 		end
-		if string.len(sourceCode) > MAX_PAYLOAD_SIZE then
+		if #sourceCode > MAX_PAYLOAD_SIZE then
 			return {status = 413; body = "Max payload size: "..MAX_PAYLOAD_SIZE}
 		end
 

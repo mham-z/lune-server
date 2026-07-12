@@ -1,5 +1,4 @@
-*.luauc
-*.log
 cache/
+runtime/
 scripts/
 !scripts/helloworld.luau

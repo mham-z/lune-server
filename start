@@ -1,19 +1,49 @@
 #!/usr/bin/env bash
 
-echo "Starting Lune server"
-lune run server.luau > server.log &
+set -euo pipefail
+
+PORT="${PORT:-8080}"
+if [[ -z "${AUTH:-}" ]]; then
+    echo "AUTH env var not set!"
+    exit 1
+fi
+LOG_DIR="runtime"
+LOG_FILE="$LOG_DIR/server.log"
+
+mkdir -p "$LOG_DIR"
+
+echo "Starting Lune server on port $PORT"
+
+lune run src/server.luau >"$LOG_FILE" 2>&1 &
 LUNE_PID=$!
 
-sleep 1
+cleanup() {
+	echo -e "\n------------------------------------------------------------"
+	trap - EXIT INT TERM
+	echo -e "Stopping server"
+	kill "$LUNE_PID" 2>/dev/null || true
+	wait "$LUNE_PID" 2>/dev/null || true
+	echo "Goodbye!"
+	exit 0
+}
 
-trap "kill $LUNE_PID 2>/dev/null" EXIT
+trap cleanup EXIT INT TERM
+echo "SIGINT to stop"
 
-echo "Starting tunnel"
-echo "------------------------------------------------------------"
+if [[ "${1:-}" == "--tunnel" ]]; then
+	if ! command -v cloudflared >/dev/null 2>&1; then
+		echo "cloudflared not found!"
+		exit 1
+	fi
 
-cloudflared tunnel --protocol http2 --no-autoupdate --edge-ip-version 4 --url http://localhost:8080
+	echo "Starting Cloudflare Tunnel..."
+	echo -e "\n------------------------------------------------------------"
 
-echo "------------------------------------------------------------"
-echo "Kill $LUNE_PID"
-kill $LUNE_PID 2>/dev/null
-echo "Goodbye"
+	cloudflared tunnel \
+		--protocol http2 \
+		--no-autoupdate \
+		--edge-ip-version 4 \
+		--url "http://localhost:$PORT"
+else
+	wait "$LUNE_PID"
+fi

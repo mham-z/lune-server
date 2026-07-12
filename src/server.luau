@@ -5,7 +5,7 @@ local fs = require("@lune/fs")
 local serde = require("@lune/serde")
 
 local PORT = tonumber(process.env.PORT) or 8080
-local AUTH_KEY = process.env.auth
+local AUTH = process.env.AUTH
 local MAX_PAYLOAD_SIZE = 300 * 1024
 local SHORT_HASH_LENGTH = 64
 local CACHE_DIR = "cache/"
@@ -103,12 +103,12 @@ local function compile(sourceCode)
 end
 
 net.serve(PORT, function(request)
-	if not AUTH_KEY or AUTH_KEY == "" then
+	if not AUTH or AUTH == "" then
 		return {status = 503; body = "Authentication was not properly set up!"}
 	end
 
 	local clientToken = request.headers["authorization"]
-	if clientToken ~= AUTH_KEY then
+	if clientToken ~= AUTH then
 		return {status = 401; body = "Unauthorized"}
 	end
 

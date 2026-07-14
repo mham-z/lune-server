@@ -14,7 +14,7 @@ mkdir -p "$LOG_DIR"
 
 echo "Starting Lune server on port $PORT"
 
-lune run src/server.luau >"$LOG_FILE" 2>&1 &
+lune run src/main.luau >"$LOG_FILE" 2>&1 &
 LUNE_PID=$!
 
 cleanup() {

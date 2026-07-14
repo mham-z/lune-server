@@ -1,19 +1,29 @@
 --!strict
-local process = require("@lune/process")
-local net = require("@lune/net")
+--[[
+	The purpose in life of this module
+	is pretty self explanatory
+]]--
 
-local compileWrapper = require("./compileWrapper")
-
-local PORT = tonumber(process.env.PORT) or 8080
-local AUTH = process.env.AUTH
 local MAX_PAYLOAD_SIZE = 300 * 1024
 
-if not AUTH or AUTH == "" or string.match(AUTH, "%S") == nil then
-	return error("AUTH env var not set!", 0)
+local server = {}
+
+local net = require("@lune/net")
+local compileWrapper = require("./compileWrapper")
+
+local serverAuth = ""
+
+function server.setAuth(auth: string): ()
+	serverAuth = auth
 end
 
-net.serve(PORT, function(request)
-	if request.headers["authorization"] ~= AUTH then
+function server.start(port: number, handler: (net.ServeRequest) -> net.ServeResponse): net.ServeHandle
+	print("Lune compilation server starting on port", port)
+	return net.serve(port, handler)
+end
+
+function server.handleRequest(request: net.ServeRequest): net.ServeResponse
+	if request.headers["authorization"] ~= serverAuth then
 		return {status = 401; body = "Unauthorized"}
 	end
 
@@ -66,6 +76,6 @@ net.serve(PORT, function(request)
 	end
 
 	return {status = 405; body = "Not allowed"}
-end)
+end
 
-print("Lune compilation server started on port", PORT)
+return server

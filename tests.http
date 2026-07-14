@@ -1,0 +1,47 @@
+### Use 'humao.rest-client' or any other applicable extension to test HTTP requests to server 
+
+### hello world compile test (should pass)
+POST http://localhost:8080
+Authorization: testauth
+
+print("Hello world!")
+
+
+
+### error compile test (should fail)
+POST http://localhost:8080
+Authorization: testauth
+
+print("Aww, shucks! (said for corn reasons)
+
+
+
+### 0 optimization constant math, compare with below
+POST http://localhost:8080
+Authorization: testauth
+
+--!optimize 0
+local x = 5 + 10 * 2
+print(x)
+
+
+
+### max optimization constant math, should be shorter than above
+POST http://localhost:8080
+Authorization: testauth
+
+--!optimize 2
+local x = 5 + 10 * 2
+print(x)
+
+
+
+### get script test (should pass)
+GET http://localhost:8080/?name=helloworld.luau
+Authorization: testauth
+
+
+
+### get script test (should fail)
+GET http://localhost:8080/?name=nonexistent.script
+Authorization: testauth

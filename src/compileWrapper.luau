@@ -8,14 +8,14 @@
 
 local SCRIPTS_DIR = "scripts/"
 
+local compileWrapper = {}
+
 local luau = require("@lune/luau")
 local filesystem = require("@lune/fs")
 local serde = require("@lune/serde")
 
 local types = require("./types")
 local cache = require("./cache")
-
-local compileWrapper = {}
 
 function compileWrapper.compile(sourceCode: string): types.CompilationResult
 		local hash = serde.hash("md5", sourceCode)

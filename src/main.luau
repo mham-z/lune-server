@@ -1,6 +1,7 @@
 --!strict
-local process = require("@lune/process")
+-- Initialize and run the server
 
+local process = require("@lune/process")
 local server = require("./server")
 
 local PORT = tonumber(process.env.PORT) or 8080
